@@ -1,3 +1,5 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+../target/
+../SpringBoot_01.iml
