@@ -26,4 +26,23 @@ public class Interface {
             return "failed";
         }
     }
+
+    @GetMapping("/login")
+    public String index(String phone,String password){
+        String sql = "select * from users where name='"+phone+"' and password='"+password+"'";
+        try {
+            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            if(resultSet.next()){
+                return "success";
+            }
+            return "unexsited";
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+            return "failed";
+        }
+    }
 }
