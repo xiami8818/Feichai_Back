@@ -27,7 +27,7 @@ public class Interface {
         }
     }
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public String index(String phone,String password){
         String sql = "select * from users where name='"+phone+"' and password='"+password+"'";
         try {
