@@ -1,17 +1,7 @@
 package com.feichai.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
-
-import javax.sql.DataSource;
-import java.io.PrintWriter;
 import java.sql.*;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
 
 @RestController
 public class Interface {
