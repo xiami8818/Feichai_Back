@@ -6,6 +6,7 @@ import java.sql.*;
 @RestController
 public class Interface {
     @PostMapping("/regist")
+    @CrossOrigin
     public String index(String name,String password,String phone){
         String sql = "select * from `users` where phone='"+phone+"'";
         try {
@@ -28,8 +29,10 @@ public class Interface {
     }
 
     @PostMapping("/login")
+    @CrossOrigin
     public String index(String phone,String password){
         String sql = "select * from users where phone='"+phone+"' and password='"+password+"'";
+        System.out.println(sql);
         try {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
             Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
