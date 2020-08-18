@@ -61,4 +61,17 @@ public class Interface {
             return "false";
         }
     }
+    @GetMapping("/getInfo")
+    @CrossOrigin
+    public String getInfo(String phone) throws SQLException {
+        String sql = "select img,name from users where phone='"+phone+"'";
+        DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        resultSet.next();
+        String message = (String)resultSet.getString("name")+"&";
+        message+=resultSet.getString("img");
+        return message;
+    }
 }
