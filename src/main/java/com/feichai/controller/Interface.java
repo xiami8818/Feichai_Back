@@ -9,7 +9,7 @@ import java.sql.*;
 public class Interface {
     @PostMapping("/regist")
     @CrossOrigin
-    public String index(String name,String password,String phone,HttpSession session){
+    public String index(String name,String password,String phone,String num,String qq,HttpSession session){
         String sql = "select * from `users` where phone='"+phone+"'";
         try {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
@@ -19,7 +19,7 @@ public class Interface {
             if(result.next()){
                 return "existed";
             }else{
-                sql = "insert into `users` (`name`, `password`, `phone`) values ('"+name+"', '"+password+"', '"+phone+"')";
+                sql = "insert into `users` (`name`, `password`, `phone`,`num`,`qq`) values ('"+name+"', '"+password+"', '"+phone+"','"+num+"','"+qq+"')";
                 statement.execute(sql);
                 session.setAttribute("login","true");
                 session.setMaxInactiveInterval(10800);
