@@ -1,7 +1,12 @@
 package com.feichai.controller;
 
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.servlet.http.*;
+import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 
 @RestController
@@ -74,4 +79,26 @@ public class Interface {
         message+=resultSet.getString("img");
         return message;
     }
+    @PostMapping("/upload")
+    @CrossOrigin
+    public String upload(HttpServletRequest req, @RequestParam("file") MultipartFile file, Model m) {
+        try {
+            //文件名 = 时间 + 名字
+            String fileName = System.currentTimeMillis() + "";
+            //通过req.getServletContext().getRealPath("") 获取当前项目的真实路径，然后拼接前面的文件名
+            String destFileName = req.getServletContext().getRealPath("")+"uploaded"+ File.separator+fileName;
+            //第一次运行的时候，这个文件所在的目录往往是不存在的，这里需要创建一下目录
+            File destFile = new File(destFileName);
+            destFile.getParentFile().mkdirs();
+            //上传到指定位置
+            file.transferTo(destFile);
+            m.addAttribute("fileName",fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "falied";
+        }
+
+        return "succeed";
+    }
+
 }
