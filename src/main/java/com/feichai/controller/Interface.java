@@ -8,41 +8,54 @@ import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/user")
 public class Interface {
+    private String checkSQL = ".*[&# ].*";
+    private Connection connection = null;
     @PostMapping("/regist")
     @CrossOrigin
-    public String index(String name,String password,String phone,HttpSession session){
+    public String index(String name,String password,String phone,HttpSession session) throws SQLException {
+        if(Pattern.matches(checkSQL,name)||Pattern.matches(checkSQL,password)||Pattern.matches(checkSQL,phone)){
+            return "illegal";
+        }
         String sql = "select * from `users` where phone='"+phone+"'";
         try {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai","xiami","19991026");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai","xiami","19991026");
             Statement statement = connection.createStatement();
             ResultSet result = statement.executeQuery(sql);
             if(result.next()){
+                statement.close();
                 return "existed";
             }else{
                 sql = "insert into `users` (`name`, `password`, `phone`) values ('"+name+"', '"+password+"', '"+phone+"')";
                 statement.execute(sql);
                 session.setAttribute("login","true");
                 session.setMaxInactiveInterval(10800);
+                statement.close();
                 return "succeed";
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
             return "failed";
+        }finally {
+            connection.close();
         }
     }
 
     @PostMapping("/login")
     @CrossOrigin
-    public String index(String phone,String password,HttpSession session){
+    public String index(String phone,String password,HttpSession session) throws SQLException {
+        if(Pattern.matches(checkSQL,phone)||Pattern.matches(checkSQL,password)){
+            return "illegal";
+        }
         String sql = "select * from users where phone='"+phone+"' and password='"+password+"'";
         try {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()){
@@ -55,6 +68,8 @@ public class Interface {
         catch (SQLException e){
             e.printStackTrace();
             return "failed";
+        }finally {
+            connection.close();
         }
     }
     @GetMapping("/check")
@@ -77,6 +92,7 @@ public class Interface {
         resultSet.next();
         String message = (String)resultSet.getString("name")+"&";
         message+=resultSet.getString("img");
+        statement.close();
         return message;
     }
     @PostMapping("/upload")
