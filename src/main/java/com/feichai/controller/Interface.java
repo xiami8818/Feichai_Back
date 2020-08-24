@@ -1,10 +1,12 @@
 package com.feichai.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.*;
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -15,6 +17,9 @@ import java.util.regex.Pattern;
 public class Interface {
     private String checkSQL = ".*[&# ].*";
     private Connection connection = null;
+
+    @Autowired
+    private DataSource dataSource;
     @PostMapping("/regist")
     @CrossOrigin
     public String index(String name,String password,String phone,HttpSession session) throws SQLException {
@@ -24,7 +29,7 @@ public class Interface {
         String sql = "select * from `users` where phone='"+phone+"'";
         try {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai","xiami","19991026");
+            connection = dataSource.getConnection();
             Statement statement = connection.createStatement();
             ResultSet result = statement.executeQuery(sql);
             if(result.next()){
@@ -46,6 +51,7 @@ public class Interface {
         }
     }
 
+
     @PostMapping("/login")
     @CrossOrigin
     public String index(String phone,String password,HttpSession session) throws SQLException {
@@ -53,10 +59,10 @@ public class Interface {
             return "illegal";
         }
         String sql = "select * from users where phone='"+phone+"' and password='"+password+"'";
+        Connection conn = null;
         try {
-            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
-            Statement statement = connection.createStatement();
+            conn = dataSource.getConnection();
+            Statement statement = conn.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()){
                 session.setAttribute("login","true");
@@ -69,7 +75,7 @@ public class Interface {
             e.printStackTrace();
             return "failed";
         }finally {
-            connection.close();
+            conn.close();
         }
     }
     @GetMapping("/check")
