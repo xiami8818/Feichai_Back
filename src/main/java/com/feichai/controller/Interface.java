@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 @RestController
 @RequestMapping("/user")
 public class Interface {
-    private String checkSQL = ".*[&# ].*";
-    private Connection connection = null;
+    private String checkSQL = ".*[&# '].*";
+    private Connection connection;
 
     @Autowired
     private DataSource dataSource;
@@ -28,7 +28,6 @@ public class Interface {
         }
         String sql = "select * from `users` where phone='"+phone+"'";
         try {
-            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
             connection = dataSource.getConnection();
             Statement statement = connection.createStatement();
             ResultSet result = statement.executeQuery(sql);
@@ -59,10 +58,9 @@ public class Interface {
             return "illegal";
         }
         String sql = "select * from users where phone='"+phone+"' and password='"+password+"'";
-        Connection conn = null;
         try {
-            conn = dataSource.getConnection();
-            Statement statement = conn.createStatement();
+            connection = dataSource.getConnection();
+            Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()){
                 session.setAttribute("login","true");
@@ -75,7 +73,7 @@ public class Interface {
             e.printStackTrace();
             return "failed";
         }finally {
-            conn.close();
+            connection.close();
         }
     }
     @GetMapping("/check")

@@ -27,6 +27,7 @@ public class jdbcConfig {
         dataSource.setDriverClassName(driverClassName);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
+        System.out.println("true");
         return dataSource;
     }
 }
