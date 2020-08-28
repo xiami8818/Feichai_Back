@@ -4,25 +4,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.*;
 import javax.sql.DataSource;
+import javax.websocket.Session;
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/user")
-public class Interface {
-    private String checkSQL = ".*[&# '].*";
+public class Interface implements HandlerInterceptor {
+    private String checkSQL = ".*[&$# '].*";
     private Connection connection;
-
+    private Map<String, HttpSession> map = new HashMap<String, HttpSession>();
     @Autowired
     private DataSource dataSource;
+
     @PostMapping("/regist")
     @CrossOrigin
-    public String index(String name,String password,String phone,HttpSession session) throws SQLException {
+    public String regist(String name,String password,String phone,HttpSession session,HttpServletResponse response) throws SQLException {
         if(Pattern.matches(checkSQL,name)||Pattern.matches(checkSQL,password)||Pattern.matches(checkSQL,phone)){
             return "illegal";
         }
@@ -37,14 +44,18 @@ public class Interface {
             }else{
                 sql = "insert into `users` (`name`, `password`, `phone`) values ('"+name+"', '"+password+"', '"+phone+"')";
                 statement.execute(sql);
+                Cookie cookie = new Cookie("sessionId",session.getId());
+                response.addCookie(cookie);
+                map.put(session.getId(),session);
                 session.setAttribute("login","true");
+                session.setAttribute("user",phone);
                 session.setMaxInactiveInterval(10800);
                 statement.close();
-                return "succeed";
+                return "$succeed";
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-            return "failed";
+            return "$failed";
         }finally {
             connection.close();
         }
@@ -52,8 +63,8 @@ public class Interface {
 
 
     @PostMapping("/login")
-    @CrossOrigin
-    public String index(String phone,String password,HttpSession session) throws SQLException {
+    @CrossOrigin(origins = "*")
+    public String login(String phone,String password,HttpSession session,HttpServletResponse response,HttpServletRequest request) throws SQLException {
         if(Pattern.matches(checkSQL,phone)||Pattern.matches(checkSQL,password)){
             return "illegal";
         }
@@ -64,25 +75,49 @@ public class Interface {
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()){
                 session.setAttribute("login","true");
+                session.setAttribute("user",phone);
                 session.setMaxInactiveInterval(10800);
-                return "succeed";
+                Cookie cookie = new Cookie("sessionId", session.getId());
+                response.addCookie(cookie);
+                map.put(session.getId(),session);
+                return "$succeed";
             }
-            return "unexsited";
+            return "$unexsited";
         }
         catch (SQLException e){
             e.printStackTrace();
-            return "failed";
+            return "$failed";
         }finally {
             connection.close();
         }
     }
     @GetMapping("/check")
-    @CrossOrigin
-    public String check(HttpSession session){
+    @CrossOrigin(origins = "*")
+    public String check(HttpServletRequest request){
+        Cookie[] cookies = request.getCookies();
+        boolean sign = false;
+        String sessionId=null;
+        if(cookies!=null){
+            for(Cookie cookie:cookies){
+                if(cookie.getName().equals("sessionId")){
+                    sessionId = cookie.getValue();
+                    sign =true;
+                    break;
+                }
+            }
+            if(!sign){
+                return "$false";
+            }
+
+        }
+        HttpSession session = map.get(sessionId);
+        if(session == null){
+            return "$false";
+        }
         if((String)session.getAttribute("login")=="true"){
-            return "true";
+            return session.getAttribute("user").toString();
         }else{
-            return "false";
+            return "$false";
         }
     }
     @GetMapping("/getInfo")
@@ -99,26 +134,19 @@ public class Interface {
         statement.close();
         return message;
     }
-    @PostMapping("/upload")
-    @CrossOrigin
-    public String upload(HttpServletRequest req, @RequestParam("file") MultipartFile file, Model m) {
-        try {
-            //文件名 = 时间 + 名字
-            String fileName = System.currentTimeMillis() + "";
-            //通过req.getServletContext().getRealPath("") 获取当前项目的真实路径，然后拼接前面的文件名
-            String destFileName = req.getServletContext().getRealPath("")+"uploaded"+ File.separator+fileName;
-            //第一次运行的时候，这个文件所在的目录往往是不存在的，这里需要创建一下目录
-            File destFile = new File(destFileName);
-            destFile.getParentFile().mkdirs();
-            //上传到指定位置
-            file.transferTo(destFile);
-            m.addAttribute("fileName",fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "falied";
-        }
 
-        return "succeed";
+    @Override
+    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
+        return true;
     }
 
+    @Override
+    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) throws Exception {
+
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
+
+    }
 }

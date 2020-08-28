@@ -1,4 +1,4 @@
-package com.feichai.controller;
+package com.feichai.config;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +27,6 @@ public class jdbcConfig {
         dataSource.setDriverClassName(driverClassName);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-        System.out.println("true");
         return dataSource;
     }
 }
