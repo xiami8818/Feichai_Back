@@ -135,6 +135,29 @@ public class Interface implements HandlerInterceptor {
         return message;
     }
 
+    @PostMapping("/logout")
+    @CrossOrigin
+    public String getInfo(HttpServletRequest request){
+        Cookie[] cookies = request.getCookies();
+        String sessionId = null;
+        boolean sign = false;
+        if(cookies!=null){
+            for(Cookie cookie : cookies){
+                if(cookie.getName().equals("sessionId")){
+                    sessionId = cookie.getValue();
+                    sign = true;
+                    break;
+                }
+            }
+            if(!sign){
+                return "$ok";
+            }
+        }
+        HttpSession session = map.get(sessionId);
+        session.setAttribute("login","false");
+        return "$ok";
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
         return true;
