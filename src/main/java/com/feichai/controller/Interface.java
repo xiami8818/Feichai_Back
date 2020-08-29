@@ -31,7 +31,7 @@ public class Interface implements HandlerInterceptor {
     @CrossOrigin
     public String regist(String name,String password,String phone,HttpSession session,HttpServletResponse response) throws SQLException {
         if(Pattern.matches(checkSQL,name)||Pattern.matches(checkSQL,password)||Pattern.matches(checkSQL,phone)){
-            return "illegal";
+            return "$illegal";
         }
         String sql = "select * from `users` where phone='"+phone+"'";
         try {
@@ -40,9 +40,9 @@ public class Interface implements HandlerInterceptor {
             ResultSet result = statement.executeQuery(sql);
             if(result.next()){
                 statement.close();
-                return "existed";
+                return "$existed";
             }else{
-                sql = "insert into `users` (`name`, `password`, `phone`) values ('"+name+"', '"+password+"', '"+phone+"')";
+                sql = "insert into `users` (`name`, `password`, `phone`, `img`) values ('"+name+"', '"+password+"', '"+phone+"', '/unLogin.jpg')";
                 statement.execute(sql);
                 Cookie cookie = new Cookie("sessionId",session.getId());
                 response.addCookie(cookie);
@@ -64,7 +64,7 @@ public class Interface implements HandlerInterceptor {
 
     @PostMapping("/login")
     @CrossOrigin(origins = "*")
-    public String login(String phone,String password,HttpSession session,HttpServletResponse response,HttpServletRequest request) throws SQLException {
+    public String login(String phone,String password,HttpSession session,HttpServletResponse response) throws SQLException {
         if(Pattern.matches(checkSQL,phone)||Pattern.matches(checkSQL,password)){
             return "illegal";
         }
@@ -80,6 +80,7 @@ public class Interface implements HandlerInterceptor {
                 Cookie cookie = new Cookie("sessionId", session.getId());
                 response.addCookie(cookie);
                 map.put(session.getId(),session);
+                System.out.println(session.getId());
                 return "$succeed";
             }
             return "$unexsited";
@@ -122,22 +123,43 @@ public class Interface implements HandlerInterceptor {
     }
     @GetMapping("/getInfo")
     @CrossOrigin
-    public String getInfo(String phone) throws SQLException {
+    public String getInfo(HttpServletRequest request) throws SQLException {
+        Cookie[] cookies = request.getCookies();
+        String phone = null;
+        String sessionId = null;
+        boolean sign = true;
+        if(cookies==null){
+            return "$false";
+        }
+        for(Cookie cookie:cookies){
+            if(cookie.getName().equals("sessionId")){
+                sessionId = cookie.getValue();
+                sign = false;
+                break;
+            }
+        }
+        if(sign){
+            return "$false";
+        }
+        HttpSession session = map.get(sessionId);
+        if(session==null){
+            return "$false";
+        }
+        phone = session.getAttribute("user").toString();
         String sql = "select img,name from users where phone='"+phone+"'";
-        DriverManager.registerDriver(new com.mysql.jdbc.Driver());
-        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/feichai?autoReconnect=true&useSSL=false","xiami","19991026");
+        connection = dataSource.getConnection();
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         resultSet.next();
         String message = (String)resultSet.getString("name")+"&";
         message+=resultSet.getString("img");
-        statement.close();
+        connection.close();
         return message;
     }
 
     @PostMapping("/logout")
     @CrossOrigin
-    public String getInfo(HttpServletRequest request){
+    public String logout(HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
         String sessionId = null;
         boolean sign = false;
@@ -156,6 +178,23 @@ public class Interface implements HandlerInterceptor {
         HttpSession session = map.get(sessionId);
         session.setAttribute("login","false");
         return "$ok";
+    }
+    @GetMapping("/account")
+    @CrossOrigin
+    public String account(HttpServletRequest request) throws SQLException {
+        connection = dataSource.getConnection();
+        String sql = "select money from money";
+        String result = null;
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        resultSet.next();
+        result = resultSet.getString("money")+"$";
+        sql = "select detail,date from account";
+        resultSet = statement.executeQuery(sql);
+        while(resultSet.next()){
+            result+= resultSet.getString("date")+" : "+resultSet.getString("detail")+"#";
+        }
+        return result;
     }
 
     @Override
