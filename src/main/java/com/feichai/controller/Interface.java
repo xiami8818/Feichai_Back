@@ -80,7 +80,6 @@ public class Interface implements HandlerInterceptor {
                 Cookie cookie = new Cookie("sessionId", session.getId());
                 response.addCookie(cookie);
                 map.put(session.getId(),session);
-                System.out.println(session.getId());
                 return "$succeed";
             }
             return "$unexsited";
@@ -247,6 +246,7 @@ public class Interface implements HandlerInterceptor {
         String sessionId = null;
         String phone = null;
         boolean sign =true;
+        System.out.println("true");
         if(cookies == null){
             return "$false";
         }
@@ -261,14 +261,15 @@ public class Interface implements HandlerInterceptor {
             return "$false";
         }
         HttpSession session = map.get(sessionId);
-        if(session==null)
+        if(session == null){
             return "$false";
+        }
         phone = session.getAttribute("user").toString();
-        String sql = "update `users` set trueName = '"+trueName+"', qq ='"+qq+"', num ='"+num+"', sex='"+sex+"', school='"+"' where phone='"+phone+"'";
+        String sql = "update `users` set trueName='"+trueName+"', qq='"+qq+"', num='"+num+"', sex='"+sex+"', school='"+school+"', saved='yes' where phone='"+phone+"'";
         connection = dataSource.getConnection();
         Statement statement = connection.createStatement();
         statement.executeUpdate(sql);
-        return "$succeed";
+        return "$success";
     }
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
