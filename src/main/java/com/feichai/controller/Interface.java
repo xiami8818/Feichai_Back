@@ -197,6 +197,43 @@ public class Interface implements HandlerInterceptor {
         return result;
     }
 
+    @GetMapping("/getUser")
+    @CrossOrigin
+    public String getUser(HttpServletRequest request) throws SQLException {
+        Cookie[] cookies = request.getCookies();
+        String sessionId = null;
+        String phone = null;
+        boolean sign =true;
+        if(cookies == null){
+            return "$false";
+        }
+        for(Cookie cookie: cookies){
+            if(cookie.getName().equals("sessionId")){
+                sessionId = cookie.getValue();
+                sign = false;
+                break;
+            }
+        }
+        if(sign){
+            return "$false";
+        }
+        HttpSession session = map.get(sessionId);
+        phone = session.getAttribute("user").toString();
+        String sql = "select * from users where phone='"+phone+"'";
+        connection = dataSource.getConnection();
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        resultSet.next();
+        String result = resultSet.getString("trueName")+"$";
+        result += resultSet.getString("qq")+"$";
+        result += resultSet.getString("num")+"$";
+        result += resultSet.getString("sex")+"$";
+        result += resultSet.getString("school")+"$";
+        result += resultSet.getString("img")+"$";
+        result += resultSet.getString("name")+"$";
+        return result;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
         return true;
