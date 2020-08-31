@@ -162,9 +162,10 @@ public class Interface implements HandlerInterceptor {
     public String logout(HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
         String sessionId = null;
-        boolean sign = false;
-        if(cookies==null)
+        if(cookies == null){
             return "$ok";
+        }
+        boolean sign = false;
         if(cookies!=null){
             for(Cookie cookie : cookies){
                 if(cookie.getName().equals("sessionId")){
@@ -178,6 +179,9 @@ public class Interface implements HandlerInterceptor {
             }
         }
         HttpSession session = map.get(sessionId);
+        if(session == null){
+            return "$ok";
+        }
         session.setAttribute("login","false");
         return "$ok";
     }
@@ -220,8 +224,6 @@ public class Interface implements HandlerInterceptor {
             return "$false";
         }
         HttpSession session = map.get(sessionId);
-        if(session==null)
-            return "$false";
         phone = session.getAttribute("user").toString();
         String sql = "select * from users where phone='"+phone+"'";
         connection = dataSource.getConnection();
@@ -236,36 +238,6 @@ public class Interface implements HandlerInterceptor {
         result += resultSet.getString("img")+"$";
         result += resultSet.getString("name")+"$";
         return result;
-    }
-    @PostMapping("/setUser")
-    @CrossOrigin
-    public String setUser(HttpServletRequest request,String trueName,String qq,String num,String sex,String school) throws SQLException {
-        Cookie[] cookies = request.getCookies();
-        String sessionId = null;
-        String phone = null;
-        boolean sign =true;
-        if(cookies == null){
-            return "$false";
-        }
-        for(Cookie cookie: cookies){
-            if(cookie.getName().equals("sessionId")){
-                sessionId = cookie.getValue();
-                sign = false;
-                break;
-            }
-        }
-        if(sign){
-            return "$false";
-        }
-        HttpSession session = map.get(sessionId);
-        if(session==null)
-            return "$false";
-        phone = session.getAttribute("user").toString();
-        String sql = "update `users` set trueName = '"+trueName+"', qq ='"+qq+"', num ='"+num+"', sex='"+sex+"', school='"+"' where phone='"+phone+"'";
-        connection = dataSource.getConnection();
-        Statement statement = connection.createStatement();
-        statement.executeUpdate(sql);
-        return "$succeed";
     }
 
     @Override
