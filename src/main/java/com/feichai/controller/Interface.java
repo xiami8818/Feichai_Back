@@ -42,7 +42,7 @@ public class Interface implements HandlerInterceptor {
                 statement.close();
                 return "$existed";
             }else{
-                sql = "insert into `users` (`name`, `password`, `phone`, `img`, `saved`) values ('"+name+"', '"+password+"', '"+phone+"', '/unLogin.jpg', 'no')";
+                sql = "insert into `users` (`name`, `password`, `phone`, `img`, `saved`, `algorithm`, `robot`, `safe`) values ('"+name+"', '"+password+"', '"+phone+"', 'http://47.100.137.63:8080/cat.jpg', 'no', 'no', 'no', 'no')";
                 statement.execute(sql);
                 Cookie cookie = new Cookie("sessionId",session.getId());
                 response.addCookie(cookie);
@@ -199,6 +199,7 @@ public class Interface implements HandlerInterceptor {
         while(resultSet.next()){
             result+= resultSet.getString("date")+" : "+resultSet.getString("detail")+"#";
         }
+        connection.close();
         return result;
     }
 
@@ -236,6 +237,7 @@ public class Interface implements HandlerInterceptor {
         result += resultSet.getString("school")+"$";
         result += resultSet.getString("img")+"$";
         result += resultSet.getString("name")+"$";
+        connection.close();
         return result;
     }
 
@@ -269,7 +271,72 @@ public class Interface implements HandlerInterceptor {
         connection = dataSource.getConnection();
         Statement statement = connection.createStatement();
         statement.executeUpdate(sql);
+        connection.close();
         return "$success";
+    }
+
+    @PostMapping("/setDepartment")
+    @CrossOrigin
+    public String algorithm(HttpServletRequest request, String department) throws SQLException {
+        Cookie[] cookies = request.getCookies();
+        String sessionId = null;
+        String phone = null;
+        if(cookies == null){
+            return "$false";
+        }
+        boolean sign = true;
+        for(Cookie cookie: cookies){
+            if(cookie.getName().equals("sessionId")){
+                sessionId = cookie.getValue();
+                sign = false;
+                break;
+            }
+        }
+        if(sign){
+            return "$false";
+        }
+        HttpSession session = map.get(sessionId);
+        phone = session.getAttribute("phone").toString();
+        connection = dataSource.getConnection();
+        Statement statement = connection.createStatement();
+        String sql = "update `users` set `"+department+"`='yes' where `phone`='"+phone+"'";
+        statement.executeUpdate(sql);
+        return "$succeed";
+    }
+    @GetMapping("/getDepartment")
+    @CrossOrigin
+    public String getDepartment(HttpServletRequest request, String department) throws SQLException {
+        Cookie[] cookies = request.getCookies();
+        String sessionId = "";
+        String phone;
+        if(cookies == null){
+            return "$false";
+        }
+        boolean sign = true;
+        for(Cookie cookie: cookies){
+            if(cookie.getName().equals("sessionId")){
+                sessionId = cookie.getValue();
+                sign = false;
+                break;
+            }
+        }
+        if(sign){
+            return "$false";
+        }
+        HttpSession session = map.get(sessionId);
+        phone = session.getAttribute("phone").toString();
+        connection = dataSource.getConnection();
+        Statement statement = connection.createStatement();
+        String sql = "select "+department+" where `phone`='"+phone+"'";
+        ResultSet resultSet = statement.executeQuery(sql);
+        if(resultSet.next()){
+            if(resultSet.getString(department).equals("yes")){
+                return "$yes";
+            }else {
+                return "$no";
+            }
+        }
+        return "$false";
     }
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
